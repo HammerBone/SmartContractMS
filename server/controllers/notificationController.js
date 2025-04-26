@@ -5,6 +5,7 @@ import Notification from '../models/notificationModel.js';
 // @route   GET /api/notifications
 // @access  Private
 export const getNotifications = asyncHandler(async (req, res) => {
+  console.log(req.user._id)
   const notifications = await Notification.find({ recipient: req.user._id })
     .sort({ createdAt: -1 })
     .populate('contractId', 'title');

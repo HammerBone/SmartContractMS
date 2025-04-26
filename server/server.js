@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import contractRoutes from './routes/contractRoutes.js';
 import templateRoutes from './routes/templateRoutes.js';
 import verificationRoutes from './routes/verificationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/verify', verificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Base route
 app.get('/', (req, res) => {
