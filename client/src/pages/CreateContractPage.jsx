@@ -228,7 +228,6 @@ const CreateContractSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string().required('Description is required'),
   templateId: Yup.string().required('Please select a template'),
-  content: Yup.object().required('Content is required'),
   parties: Yup.array().of(
     Yup.object().shape({
       email: Yup.string().email('Invalid email').required('Email is required'),
@@ -260,12 +259,28 @@ const CreateContractPage = () => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const contract = await createContract(values);
+      // Map the form values to match the contract model schema
+      const contractData = {
+        title: values.title,
+        content: values.description, // Map description to content
+        templateId: values.templateId,
+        // Don't send parties for now, we'll handle this separately
+        expiryDate: values.expiryDate || null,
+        isPublic: values.isPublic,
+      };
+
+      console.log('Sending contract data:', contractData); // Add logging
+
+      const contract = await createContract(contractData);
       if (contract) {
         navigate(getPath(`/contracts/${contract._id}`));
       }
     } catch (error) {
       console.error('Error creating contract:', error);
+      // Add more detailed error logging
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -326,8 +341,10 @@ const CreateContractPage = () => {
         }}
         validationSchema={CreateContractSchema}
         onSubmit={handleSubmit}
+        validateOnChange={true}
+        validateOnBlur={true}
       >
-        {({ values, errors, touched, isSubmitting, setFieldValue }) => (
+        {({ values, errors, touched, isSubmitting, setFieldValue, handleChange, handleBlur }) => (
           <Form>
             <FormContainer>
               <FormSection>
@@ -340,6 +357,9 @@ const CreateContractPage = () => {
                     id="title"
                     name="title"
                     placeholder="Enter contract title"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.title}
                   />
                   <ErrorMessage name="title" component={ErrorText} />
                 </FormGroup>
@@ -351,6 +371,9 @@ const CreateContractPage = () => {
                     id="description"
                     name="description"
                     placeholder="Enter contract description"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.description}
                   />
                   <ErrorMessage name="description" component={ErrorText} />
                 </FormGroup>

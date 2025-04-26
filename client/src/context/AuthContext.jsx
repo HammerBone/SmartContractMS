@@ -37,6 +37,30 @@ export const AuthProvider = ({ children }) => {
     checkLoggedIn();
   }, []);
 
+  // Refresh token
+  const refreshToken = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return false;
+      }
+      
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const { data } = await api.get('/users/profile');
+      
+      setUser(data);
+      setIsAuthenticated(true);
+      return true;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      localStorage.removeItem('token');
+      api.defaults.headers.common['Authorization'] = '';
+      setUser(null);
+      setIsAuthenticated(false);
+      return false;
+    }
+  };
+
   // Register user
   const register = async (userData) => {
     try {
@@ -145,7 +169,8 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateProfile,
-        updateDigitalIdentity
+        updateDigitalIdentity,
+        refreshToken
       }}
     >
       {children}

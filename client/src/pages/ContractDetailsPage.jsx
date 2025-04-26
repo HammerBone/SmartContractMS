@@ -232,20 +232,27 @@ const VerificationLink = styled.div`
 
 const ContractDetailsPage = () => {
   const { id } = useParams();
-  const { contract, loading, fetchContractById, signContract } = useContext(ContractContext);
+  const { contract, loading, error, fetchContractById, signContract } = useContext(ContractContext);
   const { user } = useContext(AuthContext);
   const [signing, setSigning] = useState(false);
   const [verificationUrl, setVerificationUrl] = useState('');
 
   useEffect(() => {
-    fetchContractById(id);
+    const loadContract = async () => {
+      try {
+        console.log(id);
+        await fetchContractById(id);
+      } catch (error) {
+        console.error('Error loading contract:', error);
+      }
+    };
+    loadContract();
   }, [fetchContractById, id]);
 
   useEffect(() => {
     if (contract && contract.verificationCode) {
-      // In a real app, this would be the full domain
       const baseUrl = window.location.origin;
-      setVerificationUrl(`${baseUrl}${BASE_PATH}/verify/${contract.verificationCode}`);
+      setVerificationUrl(`${baseUrl}/verify/${contract.verificationCode}`);
     }
   }, [contract]);
 
@@ -264,14 +271,10 @@ const ContractDetailsPage = () => {
   const handleSignContract = async () => {
     try {
       setSigning(true);
-      
-      // In a real app, this would use the user's private key
-      // For demo purposes, we'll simulate signing with the blockchain service
       const { signature } = await blockchainService.signData(
         contract.content,
         'demo_private_key'
       );
-      
       await signContract(contract._id, signature);
       setSigning(false);
     } catch (error) {
@@ -282,21 +285,47 @@ const ContractDetailsPage = () => {
 
   const canSign = () => {
     if (!contract || !user) return false;
-    
     const userParty = contract.parties.find(
       party => (party.user && party.user._id === user._id) || party.email === user.email
     );
-    
     return userParty && !userParty.signed;
   };
 
-  if (loading || !contract) {
+  if (loading) {
     return <Loader />;
+  }
+
+  if (error) {
+    return (
+      <ContractContainer>
+        <BackLink to={`${BASE_PATH}/contracts`}>
+          <FaArrowLeft /> Back to Contracts
+        </BackLink>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <h2>Error Loading Contract</h2>
+          <p>{error}</p>
+        </div>
+      </ContractContainer>
+    );
+  }
+
+  if (!contract) {
+    return (
+      <ContractContainer>
+        <BackLink to={`${BASE_PATH}/contracts`}>
+          <FaArrowLeft /> Back to Contracts
+        </BackLink>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <h2>Contract Not Found</h2>
+          <p>The requested contract could not be found.</p>
+        </div>
+      </ContractContainer>
+    );
   }
 
   return (
     <ContractContainer>
-      <BackLink to={`${BASE_PATH}/contracts`}>
+      <BackLink to={`/contracts`}>
         <FaArrowLeft /> Back to Contracts
       </BackLink>
       

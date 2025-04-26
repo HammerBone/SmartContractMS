@@ -11,7 +11,7 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.route('/')
-  .post(protect, admin, createTemplate)
+  .post(protect, createTemplate)
   .get(protect, getTemplates);
 
 router.route('/:id')

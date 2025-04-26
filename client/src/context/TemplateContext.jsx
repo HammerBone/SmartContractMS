@@ -11,7 +11,7 @@ export const TemplateProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, refreshToken } = useContext(AuthContext);
 
   // Fetch all templates
   const fetchTemplates = useCallback(async (category = '') => {
@@ -61,14 +61,40 @@ export const TemplateProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.post('/templates', templateData);
+      
+      // Check if we have a valid token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('You are not logged in. Please log in to continue.');
+        toast.error('You are not logged in. Please log in to continue.');
+        return null;
+      }
+      
+      // Format the data to match the server's expected structure
+      const formattedData = {
+        title: templateData.title,
+        description: templateData.description,
+        content: templateData.content,
+        category: templateData.category,
+        fields: templateData.fields,
+        isPublic: templateData.isPublic || false,
+      };
+      
+      const { data } = await api.post('/templates', formattedData);
       setTemplates(prevTemplates => [data, ...prevTemplates]);
       toast.success('Template created successfully');
       return data;
     } catch (error) {
       console.error('Error creating template:', error);
+      
+      if (error.response && error.response.status === 401) {
+        setError('Your session has expired. Please log in again.');
+        toast.error('Your session has expired. Please log in again.');
+      } else {
       setError(error.response?.data?.message || 'Error creating template');
       toast.error('Failed to create template');
+      }
+      
       return null;
     } finally {
       setLoading(false);

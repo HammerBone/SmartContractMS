@@ -18,6 +18,24 @@ const templateSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    fields: [{
+      name: {
+        type: String,
+        required: true,
+      },
+      label: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        required: true,
+      },
+      required: {
+        type: Boolean,
+        default: false,
+      },
+    }],
     creator: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

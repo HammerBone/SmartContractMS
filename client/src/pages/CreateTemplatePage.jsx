@@ -4,6 +4,7 @@ import { Formik, Form, Field, ErrorMessage, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import styled from 'styled-components';
 import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import TemplateContext from '../context/TemplateContext';
 import Loader from '../components/common/Loader';
 
@@ -203,15 +204,19 @@ const CreateTemplateSchema = Yup.object().shape({
   name: Yup.string().required('Template name is required'),
   description: Yup.string().required('Description is required'),
   category: Yup.string().required('Category is required'),
-  content: Yup.object().required('Content is required'),
+  content: Yup.object().shape({
+    title: Yup.string().required('Document title is required'),
+    body: Yup.string().required('Document body is required'),
+  }),
   fields: Yup.array().of(
     Yup.object().shape({
       name: Yup.string().required('Field name is required'),
       label: Yup.string().required('Field label is required'),
       type: Yup.string().required('Field type is required'),
+      required: Yup.boolean().default(false),
     })
   ).min(1, 'At least one field is required'),
-  isPublic: Yup.boolean(),
+  isPublic: Yup.boolean().default(true),
 });
 
 const CreateTemplatePage = () => {
@@ -220,12 +225,47 @@ const CreateTemplatePage = () => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const template = await createTemplate(values);
+      // Check if we have a valid token before submitting
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('You are not logged in. Please log in to continue.');
+        navigate('/login');
+        return;
+      }
+      
+      // Format the data to match the server's expected structure
+      const templateData = {
+        title: values.name,
+        description: values.description,
+        category: values.category,
+        content: values.content.title + '\n\n' + values.content.body, // Combine title and body
+        fields: values.fields.map(field => ({
+          name: field.name,
+          label: field.label,
+          type: field.type,
+          required: field.required || false
+        })),
+        isPublic: values.isPublic
+      };
+      
+      const template = await createTemplate(templateData);
       if (template) {
         navigate('/templates');
+      } else {
+        // If template is null, it means there was an error
+        // The error message is already shown by the TemplateContext
+        console.log('Template creation failed');
       }
     } catch (error) {
       console.error('Error creating template:', error);
+      
+      // Handle authentication errors
+      if (error.response && error.response.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        navigate('/login');
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -266,8 +306,10 @@ const CreateTemplatePage = () => {
         }}
         validationSchema={CreateTemplateSchema}
         onSubmit={handleSubmit}
+        validateOnChange={true}
+        validateOnBlur={true}
       >
-        {({ values, errors, touched, isSubmitting }) => (
+        {({ values, errors, touched, isSubmitting, handleChange, handleBlur }) => (
           <Form>
             <FormContainer>
               <FormSection>
@@ -280,6 +322,8 @@ const CreateTemplatePage = () => {
                     id="name"
                     name="name"
                     placeholder="Enter template name"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                   />
                   <ErrorMessage name="name" component={ErrorText} />
                 </FormGroup>
@@ -291,6 +335,9 @@ const CreateTemplatePage = () => {
                     id="description"
                     name="description"
                     placeholder="Enter template description"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.description}
                   />
                   <ErrorMessage name="description" component={ErrorText} />
                 </FormGroup>
@@ -301,6 +348,9 @@ const CreateTemplatePage = () => {
                     as="select"
                     id="category"
                     name="category"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.category}
                   >
                     <option value="">Select a category</option>
                     <option value="property_deed">Property Deed</option>
@@ -331,6 +381,9 @@ const CreateTemplatePage = () => {
                     id="content.title"
                     name="content.title"
                     placeholder="Enter document title"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.content.title}
                   />
                   <ErrorMessage name="content.title" component={ErrorText} />
                 </FormGroup>
@@ -343,6 +396,9 @@ const CreateTemplatePage = () => {
                     name="content.body"
                     placeholder="Enter document body text"
                     rows={10}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.content.body}
                   />
                   <ErrorMessage name="content.body" component={ErrorText} />
                 </FormGroup>

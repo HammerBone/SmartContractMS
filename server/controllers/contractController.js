@@ -6,23 +6,33 @@ import { ethers } from 'ethers';
 // @route   POST /api/contracts
 // @access  Private
 export const createContract = asyncHandler(async (req, res) => {
-  const { title, content, parties, expiryDate, templateId } = req.body;
+  try {
+    const { title, content, parties, expiryDate, templateId, isPublic } = req.body;
+    
+    console.log('Received contract data:', { title, content, parties, expiryDate, templateId, isPublic });
 
+    // Create the contract with the correct field mapping
   const contract = await Contract.create({
     title,
-    content,
+      content,
     creator: req.user._id,
-    parties,
+      parties: [], // Initialize with empty array, we'll handle parties separately
     expiryDate,
     templateId,
     status: 'pending',
   });
+    
+    console.log('Contract created:', contract);
 
   if (contract) {
     res.status(201).json(contract);
   } else {
     res.status(400);
     throw new Error('Invalid contract data');
+    }
+  } catch (error) {
+    console.error('Error creating contract:', error);
+    res.status(500).json({ message: error.message || 'Error creating contract' });
   }
 });
 

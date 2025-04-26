@@ -77,6 +77,9 @@ const Copyright = styled.div`
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
+  // Helper function to prepend base path to routes
+  const getPath = (path) => `/proxy/3000${path}`;
+  
   return (
     <FooterContainer>
       <div className="container">
@@ -104,16 +107,16 @@ const Footer = () => {
             <FooterTitle>Quick Links</FooterTitle>
             <FooterLinks>
               <li>
-                <Link to="/">Home</Link>
+                <Link to={getPath('/')}>Home</Link>
               </li>
               <li>
-                <Link to="/contracts">Contracts</Link>
+                <Link to={getPath('/contracts')}>Contracts</Link>
               </li>
               <li>
-                <Link to="/templates">Templates</Link>
+                <Link to={getPath('/templates')}>Templates</Link>
               </li>
               <li>
-                <Link to="/verify">Verify Document</Link>
+                <Link to={getPath('/verify/new')}>Verify Document</Link>
               </li>
             </FooterLinks>
           </FooterSection>
