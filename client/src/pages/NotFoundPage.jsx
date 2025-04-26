@@ -125,10 +125,10 @@ const NotFoundPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <Button to={getPath('/')} className="primary">
+        <Button to='/' className="primary">
           <FaHome /> Go to Home
         </Button>
-        <Button to={getPath('/contracts')} className="secondary">
+        <Button to='/contracts' className="secondary">
           <FaSearch /> Browse Contracts
         </Button>
       </ButtonGroup>

@@ -293,7 +293,7 @@ const CreateContractPage = () => {
   if (templatesError) {
     return (
       <CreateContractContainer>
-        <BackLink to={getPath('/contracts')}>
+        <BackLink to= '/contracts'>
           <FaArrowLeft /> Back to Contracts
         </BackLink>
         <PageTitle>Create New Contract</PageTitle>
