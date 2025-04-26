@@ -135,10 +135,10 @@ export const ContractProvider = ({ children }) => {
   };
 
   // Verify contract
-  const verifyContract = async (code) => {
+  const verifyContract = async (id) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/contracts/verify/${code}`);
+      const { data } = await api.get(`/verify/${id}`);
       setLoading(false);
       return data;
     } catch (error) {

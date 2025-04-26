@@ -1,9 +1,12 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaFileContract, FaPlus } from 'react-icons/fa';
+import { FaFileContract, FaPlus, FaSignature, FaCheckCircle, FaSearch } from 'react-icons/fa';
 import ContractContext from '../context/ContractContext';
+import AuthContext from '../context/AuthContext';
+import { blockchainService } from '../services/blockchainService';
 import Loader from '../components/common/Loader';
+import { toast } from 'react-toastify';
 
 const ContractsContainer = styled.div`
   padding: 2rem 0;
@@ -52,7 +55,7 @@ const ContractsList = styled.div`
   gap: 1.5rem;
 `;
 
-const ContractCard = styled(Link)`
+const ContractCard = styled.div`
   background-color: white;
   border-radius: var(--border-radius);
   padding: 1.5rem;
@@ -60,12 +63,19 @@ const ContractCard = styled(Link)`
   transition: all 0.3s ease;
   color: var(--text-color);
   text-decoration: none;
-  display: block;
+  display: flex;
+  flex-direction: column;
   
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   }
+`;
+
+const ContractLink = styled(Link)`
+  color: var(--text-color);
+  text-decoration: none;
+  flex: 1;
 `;
 
 const ContractTitle = styled.h3`
@@ -148,8 +158,87 @@ const EmptyStateText = styled.p`
   margin-bottom: 1.5rem;
 `;
 
+const SignButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: #2a75e8;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    background-color: var(--medium-gray);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+const VerifyButton = styled(Link)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 1rem;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: #2ecc71;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    color: white;
+  }
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--light-gray);
+`;
+
+const StatusIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: ${props => props.signed ? 'var(--success-color)' : 'var(--warning-color)'};
+`;
+
 const ContractsPage = () => {
-  const { contracts, loading, fetchContracts } = useContext(ContractContext);
+  const { contracts, loading, fetchContracts, signContract } = useContext(ContractContext);
+  const { user } = useContext(AuthContext);
+  const [signing, setSigning] = useState({});
 
   useEffect(() => {
     fetchContracts();
@@ -162,6 +251,43 @@ const ContractsPage = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const canSign = (contract) => {
+    if (!contract?.parties || !user) return false;
+    const userParty = contract.parties.find(
+      party => (party?.user && party.user._id === user._id) || party?.email === user.email
+    );
+    return userParty && !userParty.signed && contract.status === 'pending';
+  };
+
+  const isSigned = (contract) => {
+    return contract.status === 'signed';
+  };
+
+  const handleSignContract = async (contract) => {
+    try {
+      setSigning(prev => ({ ...prev, [contract._id]: true }));
+      
+      // Generate a signature using the blockchain service
+      const { signature } = await blockchainService.signData(
+        contract.content,
+        'demo_private_key'
+      );
+      
+      // Call the API to sign the contract
+      await signContract(contract._id, signature);
+      
+      toast.success('Contract signed successfully');
+      
+      // Refresh the contracts list to update the UI
+      fetchContracts();
+    } catch (error) {
+      console.error('Error signing contract:', error);
+      toast.error('Failed to sign contract: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSigning(prev => ({ ...prev, [contract._id]: false }));
+    }
   };
 
   return (
@@ -178,36 +304,61 @@ const ContractsPage = () => {
       ) : contracts.length > 0 ? (
         <ContractsList>
           {contracts.map((contract) => (
-            <ContractCard key={contract._id} to={`/contracts/${contract._id}`}>
-              <ContractTitle>{contract.title}</ContractTitle>
-              <ContractDescription>{contract.description}</ContractDescription>
-              <ContractMeta>
-                <span>Created: {formatDate(contract.createdAt)}</span>
-                <ContractStatus
-                  className={
-                    contract.status === 'pending_signatures'
-                      ? 'pending'
+            <ContractCard key={contract._id}>
+              <ContractLink to={`/contracts/${contract._id}`}>
+                <ContractTitle>{contract.title}</ContractTitle>
+                <ContractDescription>{contract.description}</ContractDescription>
+                <ContractMeta>
+                  <span>Created: {formatDate(contract.createdAt)}</span>
+                  <ContractStatus
+                    className={
+                      contract.status === 'pending_signatures'
+                        ? 'pending'
+                        : contract.status === 'completed'
+                        ? 'completed'
+                        : contract.status === 'expired'
+                        ? 'expired'
+                        : 'draft'
+                    }
+                  >
+                    {contract.status === 'pending_signatures'
+                      ? 'Pending'
                       : contract.status === 'completed'
-                      ? 'completed'
+                      ? 'Completed'
                       : contract.status === 'expired'
-                      ? 'expired'
-                      : 'draft'
-                  }
-                >
-                  {contract.status === 'pending_signatures'
-                    ? 'Pending'
-                    : contract.status === 'completed'
-                    ? 'Completed'
-                    : contract.status === 'expired'
-                    ? 'Expired'
-                    : 'Draft'}
-                </ContractStatus>
-                {contract.verificationCode && (
+                      ? 'Expired'
+                      : 'Draft'}
+                  </ContractStatus>
                   <VerificationCode>
-                    Verification Code: {contract.verificationCode}
+                    Document ID: {contract._id}
                   </VerificationCode>
+                </ContractMeta>
+              </ContractLink>
+              <ActionButtons>
+                {canSign(contract) && (
+                  <>
+                    <StatusIndicator signed={false}>
+                      <FaCheckCircle /> This contract needs your signature
+                    </StatusIndicator>
+                    <SignButton 
+                      onClick={() => handleSignContract(contract)}
+                      disabled={signing[contract._id]}
+                    >
+                      <FaSignature /> {signing[contract._id] ? 'Signing...' : 'Sign Contract'}
+                    </SignButton>
+                  </>
                 )}
-              </ContractMeta>
+                {isSigned(contract) && (
+                  <>
+                    <StatusIndicator signed={true}>
+                      <FaCheckCircle /> This contract has been signed
+                    </StatusIndicator>
+                    <VerifyButton to={`/verify/${contract._id}`}>
+                      <FaSearch /> Verify Contract
+                    </VerifyButton>
+                  </>
+                )}
+              </ActionButtons>
             </ContractCard>
           ))}
         </ContractsList>

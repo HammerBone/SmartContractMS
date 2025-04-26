@@ -3,10 +3,11 @@ import Contract from '../models/contractModel.js';
 import { ethers } from 'ethers';
 
 // @desc    Verify a contract's authenticity
-// @route   GET /api/verify/:code
+// @route   GET /api/verify/:id
 // @access  Public
 export const verifyContract = asyncHandler(async (req, res) => {
-  const contract = await Contract.findOne({ verificationCode: req.params.code })
+  // Find contract by ID instead of verification code
+  const contract = await Contract.findById(req.params.id)
     .populate('creator', 'name email')
     .populate('parties', 'name email');
 

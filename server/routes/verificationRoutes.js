@@ -4,7 +4,8 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/:code', verifyContract);
+// Route for verifying a contract by ID
+router.get('/:id', verifyContract);
 router.get('/history', protect, getVerificationHistory);
 
 export default router;

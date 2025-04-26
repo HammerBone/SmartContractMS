@@ -267,9 +267,9 @@ const ContractDetailsPage = () => {
   }, [fetchContractById, id, isAuthenticated, navigate]);
 
   useEffect(() => {
-    if (contract && contract.verificationCode) {
+    if (contract) {
       const baseUrl = window.location.origin;
-      setVerificationUrl(`${baseUrl}/verify/${contract.verificationCode}`);
+      setVerificationUrl(`${baseUrl}/verify/${contract._id}`);
     }
   }, [contract]);
 
@@ -487,7 +487,7 @@ const ContractDetailsPage = () => {
             </ActionButton>
           </ContentSection>
           
-          {contract.verificationCode && (
+          {contract && (
             <ContentSection>
               <SectionTitle>Verification</SectionTitle>
               <QRCodeContainer>
