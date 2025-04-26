@@ -254,11 +254,26 @@ const ContractsPage = () => {
   };
 
   const canSign = (contract) => {
-    if (!contract?.parties || !user) return false;
+    if (!contract || !user) return false;
+    
+    // Check if the contract is already signed
+    if (contract.status === 'signed') return false;
+    
+    // Check if the user is a party to the contract
     const userParty = contract.parties.find(
       party => (party?.user && party.user._id === user._id) || party?.email === user.email
     );
-    return userParty && !userParty.signed && contract.status === 'pending';
+    
+    // If the user is a party and hasn't signed yet, they can sign
+    if (userParty && !userParty.signed) return true;
+    
+    // If the user is the creator and the contract is in draft or pending status, they can sign
+    if (contract.creator && contract.creator._id === user._id && 
+        (contract.status === 'draft' || contract.status === 'pending')) {
+      return true;
+    }
+    
+    return false;
   };
 
   const isSigned = (contract) => {
@@ -312,18 +327,18 @@ const ContractsPage = () => {
                   <span>Created: {formatDate(contract.createdAt)}</span>
                   <ContractStatus
                     className={
-                      contract.status === 'pending_signatures'
+                      contract.status === 'pending'
                         ? 'pending'
-                        : contract.status === 'completed'
+                        : contract.status === 'signed'
                         ? 'completed'
                         : contract.status === 'expired'
                         ? 'expired'
                         : 'draft'
                     }
                   >
-                    {contract.status === 'pending_signatures'
+                    {contract.status === 'pending'
                       ? 'Pending'
-                      : contract.status === 'completed'
+                      : contract.status === 'signed'
                       ? 'Completed'
                       : contract.status === 'expired'
                       ? 'Expired'
