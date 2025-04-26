@@ -184,7 +184,7 @@ const Header = ({ basePath = BASE_PATH }) => {
   };
 
   // Helper function to prepend base path to routes
-  const getPath = (path) => `${basePath}${path}`;
+  const getPath = (path) => `${path}`;
 
   return (
     <HeaderContainer>
