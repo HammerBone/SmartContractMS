@@ -5,13 +5,14 @@ import Template from '../models/templateModel.js';
 // @route   POST /api/templates
 // @access  Private/Admin
 export const createTemplate = asyncHandler(async (req, res) => {
-  const { title, description, content, category, isPublic } = req.body;
+  const { name, description, content, category, fields, isPublic } = req.body;
 
   const template = await Template.create({
-    title,
+    name,
     description,
     content,
     category,
+    fields,
     creator: req.user._id,
     isPublic: isPublic || false,
   });
