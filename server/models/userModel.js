@@ -16,46 +16,27 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    publicKey: {
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    walletAddress: {
       type: String,
       default: '',
     },
-    digitalIdentity: {
-      verified: {
-        type: Boolean,
-        default: false,
-      },
-      idType: {
-        type: String,
-        enum: ['government_id', 'passport', 'drivers_license', 'other', ''],
-        default: '',
-      },
-      idNumber: {
-        type: String,
-        default: '',
-      },
-      verificationDate: {
-        type: Date,
-      },
-    },
-    contracts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Contract',
-      },
-    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Match user entered password to hashed password in database
+// Method to check if entered password matches the hashed password in database
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Encrypt password using bcrypt
+// Middleware to hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();

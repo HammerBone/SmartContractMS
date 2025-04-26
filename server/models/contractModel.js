@@ -1,111 +1,71 @@
 import mongoose from 'mongoose';
 
+const signatureSchema = mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    signature: {
+      type: String,
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+    walletAddress: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const contractSchema = mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
     },
-    description: {
+    content: {
       type: String,
-      required: true,
-    },
-    templateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Template',
       required: true,
     },
     creator: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
       required: true,
+      ref: 'User',
     },
     parties: [
       {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        email: {
-          type: String,
-          required: true,
-        },
-        role: {
-          type: String,
-          required: true,
-        },
-        signed: {
-          type: Boolean,
-          default: false,
-        },
-        signatureTimestamp: {
-          type: Date,
-        },
-        signatureHash: {
-          type: String,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
     ],
-    content: {
-      type: Object,
-      required: true,
-    },
+    signatures: [signatureSchema],
     status: {
       type: String,
-      enum: ['draft', 'pending_signatures', 'completed', 'expired', 'cancelled'],
+      required: true,
+      enum: ['draft', 'pending', 'signed', 'expired', 'cancelled'],
       default: 'draft',
-    },
-    blockchainData: {
-      stored: {
-        type: Boolean,
-        default: false,
-      },
-      transactionHash: {
-        type: String,
-      },
-      blockNumber: {
-        type: Number,
-      },
-      timestamp: {
-        type: Date,
-      },
-      network: {
-        type: String,
-      },
-    },
-    documentHash: {
-      type: String,
     },
     expiryDate: {
       type: Date,
     },
-    isPublic: {
-      type: Boolean,
-      default: false,
+    templateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Template',
     },
-    verificationCode: {
+    blockchainTxHash: {
       type: String,
-      unique: true,
     },
-    history: [
-      {
-        action: {
-          type: String,
-          required: true,
-        },
-        timestamp: {
-          type: Date,
-          default: Date.now,
-        },
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        details: {
-          type: String,
-        },
-      },
-    ],
+    blockchainAddress: {
+      type: String,
+    },
   },
   {
     timestamps: true,

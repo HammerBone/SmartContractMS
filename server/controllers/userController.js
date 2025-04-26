@@ -1,19 +1,12 @@
 import asyncHandler from 'express-async-handler';
-import jwt from 'jsonwebtoken';
+import generateToken from '../utils/generateToken.js';
 import User from '../models/userModel.js';
 
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'abc123', {
-    expiresIn: '30d',
-  });
-};
-
 // @desc    Register a new user
-// @route   POST /api/users
+// @route   POST /api/users/register
 // @access  Public
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, walletAddress } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -26,6 +19,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     name,
     email,
     password,
+    walletAddress,
   });
 
   if (user) {
@@ -33,7 +27,8 @@ export const registerUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      digitalIdentity: user.digitalIdentity,
+      isAdmin: user.isAdmin,
+      walletAddress: user.walletAddress,
       token: generateToken(user._id),
     });
   } else {
@@ -45,7 +40,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 // @desc    Auth user & get token
 // @route   POST /api/users/login
 // @access  Public
-export const authUser = asyncHandler(async (req, res) => {
+export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -55,7 +50,8 @@ export const authUser = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      digitalIdentity: user.digitalIdentity,
+      isAdmin: user.isAdmin,
+      walletAddress: user.walletAddress,
       token: generateToken(user._id),
     });
   } else {
@@ -75,8 +71,8 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      publicKey: user.publicKey,
-      digitalIdentity: user.digitalIdentity,
+      isAdmin: user.isAdmin,
+      walletAddress: user.walletAddress,
     });
   } else {
     res.status(404);
@@ -93,7 +89,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    user.publicKey = req.body.publicKey || user.publicKey;
+    user.walletAddress = req.body.walletAddress || user.walletAddress;
     
     if (req.body.password) {
       user.password = req.body.password;
@@ -105,39 +101,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
-      publicKey: updatedUser.publicKey,
-      digitalIdentity: updatedUser.digitalIdentity,
+      isAdmin: updatedUser.isAdmin,
+      walletAddress: updatedUser.walletAddress,
       token: generateToken(updatedUser._id),
-    });
-  } else {
-    res.status(404);
-    throw new Error('User not found');
-  }
-});
-
-// @desc    Update user digital identity
-// @route   PUT /api/users/digital-identity
-// @access  Private
-export const updateDigitalIdentity = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-
-  if (user) {
-    user.digitalIdentity = {
-      ...user.digitalIdentity,
-      idType: req.body.idType || user.digitalIdentity.idType,
-      idNumber: req.body.idNumber || user.digitalIdentity.idNumber,
-      // In a real application, verification would involve additional steps
-      verified: true,
-      verificationDate: new Date(),
-    };
-
-    const updatedUser = await user.save();
-
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      digitalIdentity: updatedUser.digitalIdentity,
     });
   } else {
     res.status(404);

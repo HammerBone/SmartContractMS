@@ -3,18 +3,17 @@ import Template from '../models/templateModel.js';
 
 // @desc    Create a new template
 // @route   POST /api/templates
-// @access  Private
+// @access  Private/Admin
 export const createTemplate = asyncHandler(async (req, res) => {
-  const { name, description, category, content, fields, isPublic } = req.body;
+  const { title, description, content, category, isPublic } = req.body;
 
   const template = await Template.create({
-    name,
+    title,
     description,
-    category,
     content,
-    fields,
-    isPublic: isPublic !== undefined ? isPublic : true,
+    category,
     creator: req.user._id,
+    isPublic: isPublic || false,
   });
 
   if (template) {
@@ -29,22 +28,15 @@ export const createTemplate = asyncHandler(async (req, res) => {
 // @route   GET /api/templates
 // @access  Private
 export const getTemplates = asyncHandler(async (req, res) => {
-  const { category } = req.query;
-  
-  let query = {
+  // Get public templates and user's own templates
+  const templates = await Template.find({
     $or: [
       { isPublic: true },
       { creator: req.user._id },
     ],
-  };
-  
-  if (category) {
-    query.category = category;
-  }
-  
-  const templates = await Template.find(query)
+  })
     .populate('creator', 'name')
-    .sort({ usageCount: -1 });
+    .sort({ createdAt: -1 });
 
   res.json(templates);
 });
@@ -59,16 +51,12 @@ export const getTemplateById = asyncHandler(async (req, res) => {
   );
 
   if (template) {
-    // Check if user is authorized to view this template
-    const isAuthorized =
-      template.isPublic ||
-      (template.creator && template.creator._id.toString() === req.user._id.toString());
-
-    if (isAuthorized) {
+    // Check if template is public or user is the creator
+    if (template.isPublic || template.creator._id.toString() === req.user._id.toString()) {
       res.json(template);
     } else {
-      res.status(403);
-      throw new Error('Not authorized to access this template');
+      res.status(401);
+      throw new Error('Not authorized to view this template');
     }
   } else {
     res.status(404);
@@ -78,26 +66,18 @@ export const getTemplateById = asyncHandler(async (req, res) => {
 
 // @desc    Update a template
 // @route   PUT /api/templates/:id
-// @access  Private
+// @access  Private/Admin
 export const updateTemplate = asyncHandler(async (req, res) => {
+  const { title, description, content, category, isPublic } = req.body;
+
   const template = await Template.findById(req.params.id);
 
   if (template) {
-    // Only the creator can update the template
-    if (template.creator.toString() !== req.user._id.toString()) {
-      res.status(403);
-      throw new Error('Not authorized to update this template');
-    }
-
-    template.name = req.body.name || template.name;
-    template.description = req.body.description || template.description;
-    template.category = req.body.category || template.category;
-    template.content = req.body.content || template.content;
-    template.fields = req.body.fields || template.fields;
-    
-    if (req.body.isPublic !== undefined) {
-      template.isPublic = req.body.isPublic;
-    }
+    template.title = title || template.title;
+    template.description = description || template.description;
+    template.content = content || template.content;
+    template.category = category || template.category;
+    template.isPublic = isPublic !== undefined ? isPublic : template.isPublic;
 
     const updatedTemplate = await template.save();
     res.json(updatedTemplate);
@@ -109,18 +89,12 @@ export const updateTemplate = asyncHandler(async (req, res) => {
 
 // @desc    Delete a template
 // @route   DELETE /api/templates/:id
-// @access  Private
+// @access  Private/Admin
 export const deleteTemplate = asyncHandler(async (req, res) => {
   const template = await Template.findById(req.params.id);
 
   if (template) {
-    // Only the creator can delete the template
-    if (template.creator.toString() !== req.user._id.toString()) {
-      res.status(403);
-      throw new Error('Not authorized to delete this template');
-    }
-
-    await Template.deleteOne({ _id: template._id });
+    await template.remove();
     res.json({ message: 'Template removed' });
   } else {
     res.status(404);

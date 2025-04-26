@@ -1,8 +1,10 @@
 import express from 'express';
-import { verifyContract } from '../controllers/contractController.js';
+import { verifyContract, getVerificationHistory } from '../controllers/verificationController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/:code').get(verifyContract);
+router.post('/:contractId', verifyContract);
+router.get('/history', protect, getVerificationHistory);
 
 export default router;
