@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create base URL with the correct path
-const baseURL = `${window.location.origin}/`;
+const baseURL = '/api';
 
 const api = axios.create({
   baseURL,

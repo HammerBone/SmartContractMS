@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import AuthContext from './AuthContext';
@@ -13,18 +13,11 @@ export const ContractProvider = ({ children }) => {
   
   const { isAuthenticated } = useContext(AuthContext);
 
-  // Fetch all contracts for the authenticated user
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchContracts();
-    }
-  }, [isAuthenticated]);
-
   // Fetch all contracts
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/api/contracts');
+      const { data } = await api.get('/contracts');
       setContracts(data);
       setLoading(false);
     } catch (error) {
@@ -32,13 +25,20 @@ export const ContractProvider = ({ children }) => {
       setLoading(false);
       toast.error('Failed to load contracts');
     }
-  };
+  }, []);
+
+  // Fetch all contracts for the authenticated user
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchContracts();
+    }
+  }, [isAuthenticated, fetchContracts]);
 
   // Fetch contract by ID
   const fetchContractById = async (id) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/api/contracts/${id}`);
+      const { data } = await api.get(`/contracts/${id}`);
       setContract(data);
       setLoading(false);
       return data;
@@ -54,7 +54,7 @@ export const ContractProvider = ({ children }) => {
   const createContract = async (contractData) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/api/contracts', contractData);
+      const { data } = await api.post('/contracts', contractData);
       setContracts([data, ...contracts]);
       setLoading(false);
       toast.success('Contract created successfully');
@@ -71,7 +71,7 @@ export const ContractProvider = ({ children }) => {
   const signContract = async (id, signatureHash) => {
     try {
       setLoading(true);
-      const { data } = await api.put(`/api/contracts/${id}/sign`, { signatureHash });
+      const { data } = await api.put(`/contracts/${id}/sign`, { signatureHash });
       
       // Update contracts list
       setContracts(
@@ -98,7 +98,7 @@ export const ContractProvider = ({ children }) => {
   const verifyContract = async (code) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/api/contracts/verify/${code}`);
+      const { data } = await api.get(`/contracts/verify/${code}`);
       setLoading(false);
       return data;
     } catch (error) {

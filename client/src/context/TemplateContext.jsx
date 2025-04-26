@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import AuthContext from './AuthContext';
@@ -13,42 +13,46 @@ export const TemplateProvider = ({ children }) => {
   
   const { isAuthenticated } = useContext(AuthContext);
 
+  // Fetch all templates
+  const fetchTemplates = useCallback(async (category = '') => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await api.get('/templates', {
+        params: { category }
+      });
+      setTemplates(data);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      setError(error.response?.data?.message || 'Error fetching templates');
+      toast.error('Failed to load templates');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Fetch all templates for the authenticated user
   useEffect(() => {
     if (isAuthenticated) {
       fetchTemplates();
     }
-  }, [isAuthenticated]);
-
-  // Fetch all templates
-  const fetchTemplates = async (category = '') => {
-    try {
-      setLoading(true);
-      const { data } = await api.get('/api/templates', {
-        params: { category }
-      });
-      setTemplates(data);
-      setLoading(false);
-    } catch (error) {
-      setError(error.response?.data?.message || 'Error fetching templates');
-      setLoading(false);
-      toast.error('Failed to load templates');
-    }
-  };
+  }, [isAuthenticated, fetchTemplates]);
 
   // Fetch template by ID
   const fetchTemplateById = async (id) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/api/templates/${id}`);
+      setError(null);
+      const { data } = await api.get(`/templates/${id}`);
       setTemplate(data);
-      setLoading(false);
       return data;
     } catch (error) {
+      console.error('Error fetching template:', error);
       setError(error.response?.data?.message || 'Error fetching template');
-      setLoading(false);
       toast.error('Failed to load template details');
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,16 +60,18 @@ export const TemplateProvider = ({ children }) => {
   const createTemplate = async (templateData) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/api/templates', templateData);
-      setTemplates([data, ...templates]);
-      setLoading(false);
+      setError(null);
+      const { data } = await api.post('/templates', templateData);
+      setTemplates(prevTemplates => [data, ...prevTemplates]);
       toast.success('Template created successfully');
       return data;
     } catch (error) {
+      console.error('Error creating template:', error);
       setError(error.response?.data?.message || 'Error creating template');
-      setLoading(false);
       toast.error('Failed to create template');
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,7 +79,7 @@ export const TemplateProvider = ({ children }) => {
   const updateTemplate = async (id, templateData) => {
     try {
       setLoading(true);
-      const { data } = await api.put(`/api/templates/${id}`, templateData);
+      const { data } = await api.put(`/templates/${id}`, templateData);
       
       // Update templates list
       setTemplates(
@@ -100,7 +106,7 @@ export const TemplateProvider = ({ children }) => {
   const deleteTemplate = async (id) => {
     try {
       setLoading(true);
-      await api.delete(`/api/templates/${id}`);
+      await api.delete(`/templates/${id}`);
       
       // Remove from templates list
       setTemplates(templates.filter((t) => t._id !== id));

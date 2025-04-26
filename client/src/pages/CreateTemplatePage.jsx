@@ -218,14 +218,11 @@ const CreateTemplatePage = () => {
   const navigate = useNavigate();
   const { createTemplate, loading } = useContext(TemplateContext);
 
-  // Helper function to prepend base path to routes
-  const getPath = (path) => `${BASE_PATH}${path}`;
-
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const template = await createTemplate(values);
       if (template) {
-        navigate(getPath('/templates'));
+        navigate('/templates');
       }
     } catch (error) {
       console.error('Error creating template:', error);
@@ -236,7 +233,7 @@ const CreateTemplatePage = () => {
 
   return (
     <CreateTemplateContainer>
-      <BackLink to={getPath('/templates')}>
+      <BackLink to="/templates">
         <FaArrowLeft /> Back to Templates
       </BackLink>
       

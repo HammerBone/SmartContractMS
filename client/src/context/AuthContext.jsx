@@ -5,9 +5,6 @@ import api from '../services/api';
 
 const AuthContext = createContext();
 
-// Base path for the application
-const BASE_PATH = '/proxy/3000';
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -23,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         if (token) {
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          const { data } = await api.get('/api/users/profile');
+          const { data } = await api.get('/users/profile');
           
           setUser(data);
           setIsAuthenticated(true);
@@ -44,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/api/users', userData);
+      const { data } = await api.post('/users', userData);
       
       localStorage.setItem('token', data.token);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
@@ -54,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       
       toast.success('Registration successful!');
-      navigate(`${BASE_PATH}/dashboard`);
+      navigate('/dashboard');
       
       return true;
     } catch (error) {
@@ -68,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/api/users/login', { email, password });
+      const { data } = await api.post('/users/login', { email, password });
       
       localStorage.setItem('token', data.token);
       api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
@@ -78,7 +75,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
       
       toast.success('Login successful!');
-      navigate(`${BASE_PATH}/dashboard`);
+      navigate('/dashboard');
       
       return true;
     } catch (error) {
@@ -95,14 +92,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     toast.info('Logged out successfully');
-    navigate(`${BASE_PATH}/`);
+    navigate('/');
   };
 
   // Update user profile
   const updateProfile = async (userData) => {
     try {
       setLoading(true);
-      const { data } = await api.put('/api/users/profile', userData);
+      const { data } = await api.put('/users/profile', userData);
       
       setUser(data);
       setLoading(false);
@@ -120,7 +117,7 @@ export const AuthProvider = ({ children }) => {
   const updateDigitalIdentity = async (identityData) => {
     try {
       setLoading(true);
-      const { data } = await api.put('/api/users/digital-identity', identityData);
+      const { data } = await api.put('/users/digital-identity', identityData);
       
       setUser({
         ...user,

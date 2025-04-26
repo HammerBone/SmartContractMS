@@ -5,9 +5,6 @@ import { FaFileContract, FaPlus } from 'react-icons/fa';
 import ContractContext from '../context/ContractContext';
 import Loader from '../components/common/Loader';
 
-// Base path for the application
-const BASE_PATH = '/proxy/3000';
-
 const ContractsContainer = styled.div`
   padding: 2rem 0;
 `;
@@ -143,9 +140,6 @@ const EmptyStateText = styled.p`
 const ContractsPage = () => {
   const { contracts, loading, fetchContracts } = useContext(ContractContext);
 
-  // Helper function to prepend base path to routes
-  const getPath = (path) => `${BASE_PATH}${path}`;
-
   useEffect(() => {
     fetchContracts();
   }, [fetchContracts]);
@@ -163,7 +157,7 @@ const ContractsPage = () => {
     <ContractsContainer>
       <ContractsHeader>
         <PageTitle>My Contracts</PageTitle>
-        <CreateButton to={getPath('/contracts/create')}>
+        <CreateButton to="/contracts/create">
           <FaPlus /> Create Contract
         </CreateButton>
       </ContractsHeader>
@@ -173,7 +167,7 @@ const ContractsPage = () => {
       ) : contracts.length > 0 ? (
         <ContractsList>
           {contracts.map((contract) => (
-            <ContractCard key={contract._id} to={getPath(`/contracts/${contract._id}`)}>
+            <ContractCard key={contract._id} to={`/contracts/${contract._id}`}>
               <ContractTitle>{contract.title}</ContractTitle>
               <ContractDescription>{contract.description}</ContractDescription>
               <ContractMeta>
@@ -207,7 +201,7 @@ const ContractsPage = () => {
             <FaFileContract />
           </EmptyStateIcon>
           <EmptyStateText>You don't have any contracts yet.</EmptyStateText>
-          <CreateButton to={getPath('/contracts/create')}>
+          <CreateButton to="/contracts/create">
             <FaPlus /> Create Your First Contract
           </CreateButton>
         </EmptyState>

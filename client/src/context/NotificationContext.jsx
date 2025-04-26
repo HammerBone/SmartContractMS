@@ -30,7 +30,7 @@ export const NotificationProvider = ({ children }) => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/api/notifications');
+      const { data } = await api.get('/notifications');
       setNotifications(data);
       setLoading(false);
     } catch (error) {
@@ -42,7 +42,7 @@ export const NotificationProvider = ({ children }) => {
   // Mark notification as read
   const markAsRead = async (id) => {
     try {
-      await api.put(`/api/notifications/${id}/read`);
+      await api.put(`/notifications/${id}/read`);
       
       // Update notifications list
       setNotifications(
@@ -61,7 +61,7 @@ export const NotificationProvider = ({ children }) => {
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
-      await api.put('/api/notifications/read-all');
+      await api.put('/notifications/read-all');
       
       // Update all notifications to read
       setNotifications(
@@ -78,7 +78,7 @@ export const NotificationProvider = ({ children }) => {
   // Delete notification
   const deleteNotification = async (id) => {
     try {
-      await api.delete(`/api/notifications/${id}`);
+      await api.delete(`/notifications/${id}`);
       
       // Remove from notifications list
       setNotifications(notifications.filter((notification) => notification._id !== id));

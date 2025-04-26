@@ -152,112 +152,122 @@ const EmptyStateText = styled.p`
   margin-bottom: 1.5rem;
 `;
 
-const TemplatesPage = () => {
-  const { templates, loading, fetchTemplates } = useContext(TemplateContext);
-  const [activeCategory, setActiveCategory] = useState('all');
+const SearchContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+`;
 
-  // Helper function to prepend base path to routes
-  const getPath = (path) => `${BASE_PATH}${path}`;
+const SearchInput = styled.input`
+  padding: 0.5rem;
+  border: 1px solid var(--light-gray);
+  border-radius: var(--border-radius);
+`;
+
+const CategorySelect = styled.select`
+  padding: 0.5rem;
+  border: 1px solid var(--light-gray);
+  border-radius: var(--border-radius);
+`;
+
+const TemplatesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+`;
+
+const TemplatesPage = () => {
+  const { templates, loading, error, fetchTemplates } = useContext(TemplateContext);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     fetchTemplates();
   }, [fetchTemplates]);
 
-  const handleCategoryFilter = (category) => {
-    setActiveCategory(category);
-    if (category === 'all') {
-      fetchTemplates();
-    } else {
-      fetchTemplates(category);
-    }
-  };
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const formatCategory = (category) => {
-    return category
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return (
+      <TemplatesContainer>
+        <PageTitle>Contract Templates</PageTitle>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <p style={{ color: 'var(--danger-color)', marginBottom: '1rem' }}>
+            {error}
+          </p>
+          <button
+            onClick={() => fetchTemplates()}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--primary-color)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 'var(--border-radius)',
+              cursor: 'pointer'
+            }}
+          >
+            Retry Loading Templates
+          </button>
+        </div>
+      </TemplatesContainer>
+    );
+  }
 
   return (
     <TemplatesContainer>
       <TemplatesHeader>
         <PageTitle>Contract Templates</PageTitle>
-        <CreateButton to={getPath('/templates/create')}>
+        <CreateButton to="/templates/create">
           <FaPlus /> Create Template
         </CreateButton>
       </TemplatesHeader>
 
-      <FilterContainer>
-        <FilterButton
-          active={activeCategory === 'all'}
-          onClick={() => handleCategoryFilter('all')}
+      <SearchContainer>
+        <SearchInput
+          type="text"
+          placeholder="Search templates..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <CategorySelect
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
         >
-          <FaFilter /> All
-        </FilterButton>
-        <FilterButton
-          active={activeCategory === 'property_deed'}
-          onClick={() => handleCategoryFilter('property_deed')}
-        >
-          Property Deed
-        </FilterButton>
-        <FilterButton
-          active={activeCategory === 'will'}
-          onClick={() => handleCategoryFilter('will')}
-        >
-          Will
-        </FilterButton>
-        <FilterButton
-          active={activeCategory === 'marriage_license'}
-          onClick={() => handleCategoryFilter('marriage_license')}
-        >
-          Marriage License
-        </FilterButton>
-        <FilterButton
-          active={activeCategory === 'business_agreement'}
-          onClick={() => handleCategoryFilter('business_agreement')}
-        >
-          Business Agreement
-        </FilterButton>
-        <FilterButton
-          active={activeCategory === 'employment_contract'}
-          onClick={() => handleCategoryFilter('employment_contract')}
-        >
-          Employment Contract
-        </FilterButton>
-      </FilterContainer>
+          <option value="all">All Categories</option>
+          <option value="employment">Employment</option>
+          <option value="sales">Sales</option>
+          <option value="service">Service</option>
+          <option value="rental">Rental</option>
+          <option value="other">Other</option>
+        </CategorySelect>
+      </SearchContainer>
 
-      {loading ? (
-        <Loader />
-      ) : templates.length > 0 ? (
-        <TemplatesList>
-          {templates.map((template) => (
-            <TemplateCard key={template._id} to={getPath(`/templates/${template._id}`)}>
-              <TemplateIcon>
-                <FaFileAlt />
-              </TemplateIcon>
-              <TemplateTitle>{template.name}</TemplateTitle>
-              <TemplateDescription>{template.description}</TemplateDescription>
-              <TemplateMeta>
-                <TemplateCategory>
-                  {formatCategory(template.category)}
-                </TemplateCategory>
-                <span>Used {template.usageCount} times</span>
-              </TemplateMeta>
-            </TemplateCard>
-          ))}
-        </TemplatesList>
-      ) : (
-        <EmptyState>
-          <EmptyStateIcon>
-            <FaFileAlt />
-          </EmptyStateIcon>
-          <EmptyStateText>No templates found for this category.</EmptyStateText>
-          <CreateButton to={getPath('/templates/create')}>
-            <FaPlus /> Create Your First Template
-          </CreateButton>
-        </EmptyState>
-      )}
+      <TemplatesGrid>
+        {filteredTemplates.map(template => (
+          <TemplateCard key={template._id} to={`${BASE_PATH}/templates/${template._id}`}>
+            <TemplateIcon>
+              <FaFileAlt />
+            </TemplateIcon>
+            <TemplateTitle>{template.name}</TemplateTitle>
+            <TemplateDescription>{template.description}</TemplateDescription>
+            <TemplateMeta>
+              <TemplateCategory>
+                {template.category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              </TemplateCategory>
+              <span>Used {template.usageCount} times</span>
+            </TemplateMeta>
+          </TemplateCard>
+        ))}
+      </TemplatesGrid>
     </TemplatesContainer>
   );
 };

@@ -237,9 +237,6 @@ const ContractDetailsPage = () => {
   const [signing, setSigning] = useState(false);
   const [verificationUrl, setVerificationUrl] = useState('');
 
-  // Helper function to prepend base path to routes
-  const getPath = (path) => `${BASE_PATH}${path}`;
-
   useEffect(() => {
     fetchContractById(id);
   }, [fetchContractById, id]);
@@ -299,7 +296,7 @@ const ContractDetailsPage = () => {
 
   return (
     <ContractContainer>
-      <BackLink to={getPath('/contracts')}>
+      <BackLink to={`${BASE_PATH}/contracts`}>
         <FaArrowLeft /> Back to Contracts
       </BackLink>
       

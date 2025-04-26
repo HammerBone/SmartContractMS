@@ -242,15 +242,17 @@ const CreateContractSchema = Yup.object().shape({
 const CreateContractPage = () => {
   const navigate = useNavigate();
   const { createContract, loading: contractLoading } = useContext(ContractContext);
-  const { templates, loading: templatesLoading, fetchTemplates } = useContext(TemplateContext);
+  const { templates, loading: templatesLoading, error: templatesError, fetchTemplates } = useContext(TemplateContext);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Helper function to prepend base path to routes
   const getPath = (path) => `${BASE_PATH}${path}`;
 
   useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
+    if (!templates.length) {
+      fetchTemplates();
+    }
+  }, [fetchTemplates, templates.length]);
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
@@ -271,6 +273,37 @@ const CreateContractPage = () => {
 
   if (templatesLoading) {
     return <Loader />;
+  }
+
+  if (templatesError) {
+    return (
+      <CreateContractContainer>
+        <BackLink to={getPath('/contracts')}>
+          <FaArrowLeft /> Back to Contracts
+        </BackLink>
+        <PageTitle>Create New Contract</PageTitle>
+        <FormContainer>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <p style={{ color: 'var(--danger-color)', marginBottom: '1rem' }}>
+              {templatesError}
+            </p>
+            <button
+              onClick={() => fetchTemplates()}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--primary-color)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 'var(--border-radius)',
+                cursor: 'pointer'
+              }}
+            >
+              Retry Loading Templates
+            </button>
+          </div>
+        </FormContainer>
+      </CreateContractContainer>
+    );
   }
 
   return (
