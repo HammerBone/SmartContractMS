@@ -385,18 +385,18 @@ const ContractDetailsPage = () => {
             <strong>Status:</strong>{' '}
             <StatusBadge
               className={
-                contract.status === 'pending_signatures'
+                contract.status === 'pending'
                   ? 'pending'
-                  : contract.status === 'completed'
+                  : contract.status === 'signed'
                   ? 'completed'
                   : contract.status === 'expired'
                   ? 'expired'
                   : 'draft'
               }
             >
-              {contract.status === 'pending_signatures'
-                ? 'Pending Signatures'
-                : contract.status === 'completed'
+              {contract.status === 'pending'
+                ? 'Pending'
+                : contract.status === 'signed'
                 ? 'Completed'
                 : contract.status === 'expired'
                 ? 'Expired'

@@ -288,8 +288,8 @@ const DashboardPage = () => {
     if (contracts.length > 0) {
       const newStats = {
         total: contracts.length,
-        pending: contracts.filter(c => c.status === 'pending_signatures').length,
-        completed: contracts.filter(c => c.status === 'completed').length,
+        pending: contracts.filter(c => c.status === 'pending').length,
+        completed: contracts.filter(c => c.status === 'signed').length,
         expired: contracts.filter(c => c.status === 'expired').length,
       };
       setStats(newStats);
@@ -414,18 +414,18 @@ const DashboardPage = () => {
                   <span>Created: {formatDate(contract.createdAt)}</span>
                   <ContractStatus
                     className={
-                      contract.status === 'pending_signatures'
+                      contract.status === 'pending'
                         ? 'pending'
-                        : contract.status === 'completed'
+                        : contract.status === 'signed'
                         ? 'completed'
                         : contract.status === 'expired'
                         ? 'expired'
                         : 'draft'
                     }
                   >
-                    {contract.status === 'pending_signatures'
+                    {contract.status === 'pending'
                       ? 'Pending'
-                      : contract.status === 'completed'
+                      : contract.status === 'signed'
                       ? 'Completed'
                       : contract.status === 'expired'
                       ? 'Expired'

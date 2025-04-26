@@ -258,7 +258,7 @@ const VerifyPage = () => {
 
   return (
     <VerifyContainer>
-      <BackLink to={getPath('/')}>
+      <BackLink to='/contracts'>
         <FaArrowLeft /> Back to Home
       </BackLink>
       
