@@ -1,22 +1,22 @@
 import express from 'express';
-import {
-  createTemplate,
-  getTemplates,
-  getTemplateById,
-  updateTemplate,
-  deleteTemplate,
+import { 
+  createTemplate, 
+  getTemplates, 
+  getTemplateById, 
+  updateTemplate, 
+  deleteTemplate 
 } from '../controllers/templateController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
-  .post(protect, createTemplate)
+  .post(protect, admin, createTemplate)
   .get(protect, getTemplates);
 
 router.route('/:id')
   .get(protect, getTemplateById)
-  .put(protect, updateTemplate)
-  .delete(protect, deleteTemplate);
+  .put(protect, admin, updateTemplate)
+  .delete(protect, admin, deleteTemplate);
 
 export default router;
