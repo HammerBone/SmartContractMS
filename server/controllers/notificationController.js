@@ -17,7 +17,7 @@ export const getNotifications = asyncHandler(async (req, res) => {
 // @access  Private
 export const markNotificationRead = asyncHandler(async (req, res) => {
   const notification = await Notification.findById(req.params.id);
-
+  console.log(notification)
   if (notification) {
     // Ensure the notification belongs to the user
     if (notification.recipient.toString() !== req.user._id.toString()) {

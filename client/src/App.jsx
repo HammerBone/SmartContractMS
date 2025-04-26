@@ -31,7 +31,7 @@ import { TemplateProvider } from './context/TemplateContext';
 import { NotificationProvider } from './context/NotificationContext';
 
 // Base path for the application
-const BASE_PATH = '/proxy/3000';
+const BASE_PATH = '/3000';
 
 function App() {
   const [loading, setLoading] = useState(true);

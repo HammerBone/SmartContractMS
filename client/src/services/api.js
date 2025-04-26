@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create base URL with the correct path
-const baseURL = `${window.location.origin}/proxy/5000`;
+const baseURL = `${window.location.origin}/`;
 
 const api = axios.create({
   baseURL,
@@ -32,7 +32,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/proxy/3000/login';
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

@@ -57,7 +57,7 @@ SmartContractMS/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/SmartContractMS.git
+   git clone https://github.com/HammerBone/SmartContractMS.git
    cd SmartContractMS
    ```
 

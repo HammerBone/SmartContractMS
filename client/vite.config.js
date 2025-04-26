@@ -4,20 +4,20 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/proxy/3000/',
+  base: '/',
   server: {
     port: 3000,
     host: true,
     cors: true,
-    strictPort: true,
-    hmr: {
-      clientPort: 443
-    },
-    allowedHosts: ['d3ha44vk70xudr.cloudfront.net', 'localhost']
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   preview: {
-    port: 3000,
-    host: true,
-    strictPort: true
+    port: 3000
   }
 })

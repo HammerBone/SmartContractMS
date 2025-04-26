@@ -6,7 +6,7 @@ import { FaFileContract, FaShieldAlt, FaFingerprint, FaSearch, FaRegClock, FaGlo
 import AuthContext from '../context/AuthContext';
 
 // Base path for the application
-const BASE_PATH = '/proxy/3000';
+const BASE_PATH = '/3000';
 
 const HeroSection = styled.section`
   padding: 5rem 0;
@@ -238,7 +238,7 @@ const HomePage = () => {
   const { isAuthenticated } = useContext(AuthContext);
   
   // Helper function to prepend base path to routes
-  const getPath = (path) => `${BASE_PATH}${path}`;
+  const getPath = (path) => `${path}`;
   
   const features = [
     {
