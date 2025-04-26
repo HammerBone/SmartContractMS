@@ -85,8 +85,8 @@ const ContractDescription = styled.p`
 
 const ContractMeta = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   font-size: 0.8rem;
   color: var(--medium-gray);
 `;
@@ -96,6 +96,7 @@ const ContractStatus = styled.span`
   border-radius: 20px;
   font-size: 0.7rem;
   font-weight: 500;
+  align-self: flex-start;
   
   &.pending {
     background-color: rgba(255, 190, 11, 0.1);
@@ -116,6 +117,16 @@ const ContractStatus = styled.span`
     background-color: rgba(173, 181, 189, 0.1);
     color: var(--dark-gray);
   }
+`;
+
+const VerificationCode = styled.div`
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  word-break: break-all;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
 `;
 
 const EmptyState = styled.div`
@@ -191,6 +202,11 @@ const ContractsPage = () => {
                     ? 'Expired'
                     : 'Draft'}
                 </ContractStatus>
+                {contract.verificationCode && (
+                  <VerificationCode>
+                    Verification Code: {contract.verificationCode}
+                  </VerificationCode>
+                )}
               </ContractMeta>
             </ContractCard>
           ))}

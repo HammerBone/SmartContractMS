@@ -30,9 +30,6 @@ import { ContractProvider } from './context/ContractContext';
 import { TemplateProvider } from './context/TemplateContext';
 import { NotificationProvider } from './context/NotificationContext';
 
-// Base path for the application
-const BASE_PATH = '/3000';
-
 function App() {
   const [loading, setLoading] = useState(true);
 
@@ -53,12 +50,13 @@ function App() {
         <TemplateProvider>
           <NotificationProvider>
             <div className="app">
-              <Header basePath={BASE_PATH} />
+              <Header />
               <main className="container">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/verify" element={<VerifyPage />} />
                   <Route path="/verify/:code" element={<VerifyPage />} />
                   
                   <Route path="/dashboard" element={

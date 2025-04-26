@@ -78,7 +78,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   // Helper function to prepend base path to routes
-  const getPath = (path) => `/proxy/3000${path}`;
+  const getPath = (path) => `/3000${path}`;
   
   return (
     <FooterContainer>
@@ -116,7 +116,7 @@ const Footer = () => {
                 <Link to={getPath('/templates')}>Templates</Link>
               </li>
               <li>
-                <Link to={getPath('/verify/new')}>Verify Document</Link>
+                <Link to='/verify'>Verify Document</Link>
               </li>
             </FooterLinks>
           </FooterSection>

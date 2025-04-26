@@ -106,8 +106,8 @@ const ResultHeader = styled.div`
 `;
 
 const ResultIcon = styled.div`
-  font-size: 3rem;
-  color: ${props => props.verified ? 'var(--success-color)' : 'var(--danger-color)'};
+  font-size: 2rem;
+  color: ${props => props.verified === 'true' ? 'var(--success-color)' : 'var(--danger-color)'};
 `;
 
 const ResultTitle = styled.h2`
@@ -294,18 +294,18 @@ const VerifyPage = () => {
           transition={{ duration: 0.5 }}
         >
           <ResultHeader>
-            <ResultIcon verified={verificationResult.isVerified}>
-              {verificationResult.isVerified ? <FaCheckCircle /> : <FaTimesCircle />}
+            <ResultIcon verified={verificationResult.verified.toString()}>
+              {verificationResult.verified ? <FaCheckCircle /> : <FaTimesCircle />}
             </ResultIcon>
             <ResultTitle>
-              {verificationResult.isVerified
+              {verificationResult.verified
                 ? 'Contract Verified'
                 : 'Contract Not Fully Verified'}
             </ResultTitle>
           </ResultHeader>
           
           <p>
-            {verificationResult.isVerified
+            {verificationResult.verified
               ? 'This contract has been verified and is stored on the blockchain.'
               : 'This contract exists but has not been fully verified or completed.'}
           </p>
