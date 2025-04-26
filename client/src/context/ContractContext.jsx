@@ -1,10 +1,18 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import AuthContext from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const ContractContext = createContext();
+
+export const useContract = () => {
+  const context = useContext(ContractContext);
+  if (!context) {
+    throw new Error('useContract must be used within a ContractProvider');
+  }
+  return context;
+};
 
 export const ContractProvider = ({ children }) => {
   const [contracts, setContracts] = useState([]);
@@ -15,33 +23,35 @@ export const ContractProvider = ({ children }) => {
   const { isAuthenticated, refreshToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const checkAuth = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please log in to access this feature');
+      navigate('/login');
+      return false;
+    }
+    return true;
+  };
+
   // Fetch all contracts
   const fetchContracts = useCallback(async () => {
+    if (!checkAuth()) return;
+    
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Check if we have a valid token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('You are not logged in. Please log in to continue.');
-        toast.error('You are not logged in. Please log in to continue.');
-        navigate('/login');
-        return;
-      }
-      
-      const { data } = await api.get('/contracts');
-      setContracts(data);
-      setLoading(false);
+      const response = await api.get('/contracts');
+      setContracts(response.data);
     } catch (error) {
+      console.error('Error fetching contracts:', error);
       if (error.response?.status === 401) {
-        setError('Your session has expired. Please log in again.');
         toast.error('Your session has expired. Please log in again.');
         navigate('/login');
       } else {
         setError(error.response?.data?.message || 'Error fetching contracts');
         toast.error('Failed to load contracts');
       }
+    } finally {
       setLoading(false);
     }
   }, [navigate]);
@@ -55,40 +65,28 @@ export const ContractProvider = ({ children }) => {
 
   // Fetch contract by ID
   const fetchContractById = async (id) => {
+    if (!checkAuth()) return null;
+    
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Check if we have a valid token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('You are not logged in. Please log in to continue.');
-        toast.error('You are not logged in. Please log in to continue.');
-        navigate('/login');
-        return null;
-      }
-      
-      const { data } = await api.get(`/contracts/${id}`);
-      if (!data) {
-        setError('Contract not found');
-        setLoading(false);
-        return null;
-      }
-      setContract(data);
-      setLoading(false);
-      return data;
+      const response = await api.get(`/contracts/${id}`);
+      return response.data;
     } catch (error) {
+      console.error('Error fetching contract:', error);
       if (error.response?.status === 401) {
-        setError('Your session has expired. Please log in again.');
         toast.error('Your session has expired. Please log in again.');
         navigate('/login');
+      } else if (error.response?.status === 404) {
+        setError('Contract not found');
+        toast.error('Contract not found');
       } else {
-        const errorMessage = error.response?.data?.message || 'Error fetching contract';
-        setError(errorMessage);
-        toast.error(errorMessage);
+        setError(error.response?.data?.message || 'Error fetching contract');
+        toast.error('Failed to load contract details');
       }
-      setLoading(false);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 

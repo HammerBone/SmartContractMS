@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import AuthContext from './AuthContext';
@@ -13,31 +13,36 @@ export const NotificationProvider = ({ children }) => {
   
   const { isAuthenticated } = useContext(AuthContext);
 
+  // Fetch all notifications
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/notifications');
+      setNotifications(response.data || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setError(error.response?.data?.message || 'Error fetching notifications');
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
   // Fetch notifications for the authenticated user
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchNotifications]);
 
   // Update unread count whenever notifications change
   useEffect(() => {
     const count = notifications.filter(notification => !notification.read).length;
     setUnreadCount(count);
   }, [notifications]);
-
-  // Fetch all notifications
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.get('/notifications');
-      setNotifications(data);
-      setLoading(false);
-    } catch (error) {
-      setError(error.response?.data?.message || 'Error fetching notifications');
-      setLoading(false);
-    }
-  };
 
   // Mark notification as read
   const markAsRead = async (id) => {
@@ -53,7 +58,9 @@ export const NotificationProvider = ({ children }) => {
       
       return true;
     } catch (error) {
+      console.error('Error marking notification as read:', error);
       setError(error.response?.data?.message || 'Error marking notification as read');
+      toast.error('Failed to mark notification as read');
       return false;
     }
   };
@@ -70,7 +77,9 @@ export const NotificationProvider = ({ children }) => {
       
       return true;
     } catch (error) {
+      console.error('Error marking all notifications as read:', error);
       setError(error.response?.data?.message || 'Error marking all notifications as read');
+      toast.error('Failed to mark all notifications as read');
       return false;
     }
   };
@@ -85,7 +94,9 @@ export const NotificationProvider = ({ children }) => {
       
       return true;
     } catch (error) {
+      console.error('Error deleting notification:', error);
       setError(error.response?.data?.message || 'Error deleting notification');
+      toast.error('Failed to delete notification');
       return false;
     }
   };

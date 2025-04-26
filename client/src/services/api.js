@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // Increase timeout to 30 seconds
 });
 
 // Add token to requests if available
@@ -36,19 +36,47 @@ api.interceptors.response.use(
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      if (error.response.status === 401) {
-        // Handle unauthorized access
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      } else if (error.response.status === 404) {
-        console.error('Resource not found:', error.response.data);
-      } else if (error.response.status === 500) {
-        console.error('Server error:', error.response.data);
-        toast.error('An unexpected error occurred. Please try again later.');
+      const status = error.response.status;
+      const errorData = error.response.data;
+      
+      switch (status) {
+        case 401:
+          // Handle unauthorized access
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          break;
+        case 404:
+          console.error('Resource not found:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: status
+          });
+          toast.error('The requested resource was not found.');
+          break;
+        case 500:
+          console.error('Server error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: status,
+            message: errorData?.message || 'Internal server error'
+          });
+          toast.error('An unexpected error occurred. Please try again later.');
+          break;
+        default:
+          console.error('API Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: status,
+            message: errorData?.message || 'An error occurred'
+          });
+          toast.error(errorData?.message || 'An error occurred while processing your request.');
       }
     } else if (error.request) {
       // The request was made but no response was received
-      console.error('No response received:', error.request);
+      console.error('No response received:', {
+        url: error.config?.url,
+        method: error.config?.method
+      });
       toast.error('Unable to connect to the server. Please check your internet connection.');
     } else {
       // Something happened in setting up the request that triggered an Error

@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { FaBell, FaCheck, FaTrash } from 'react-icons/fa';
+import { FaBell, FaCheck, FaTrash, FaSync } from 'react-icons/fa';
 import NotificationContext from '../../context/NotificationContext';
 import Loader from '../common/Loader';
 
@@ -116,8 +116,32 @@ const ActionButton = styled.button`
   }
 `;
 
+const RefreshButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  svg {
+    font-size: 0.9rem;
+  }
+  
+  &.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
 const NotificationDropdown = ({ onClose }) => {
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useContext(NotificationContext);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, fetchNotifications } = useContext(NotificationContext);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -168,6 +192,10 @@ const NotificationDropdown = ({ onClose }) => {
     await markAllAsRead();
   };
 
+  const handleRefresh = async () => {
+    await fetchNotifications();
+  };
+
   return (
     <DropdownContainer
       ref={dropdownRef}
@@ -181,9 +209,14 @@ const NotificationDropdown = ({ onClose }) => {
           <FaBell /> Notifications
           {unreadCount > 0 && <span>({unreadCount})</span>}
         </DropdownTitle>
-        {unreadCount > 0 && (
-          <MarkAllRead onClick={handleMarkAllAsRead}>Mark all as read</MarkAllRead>
-        )}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <RefreshButton onClick={handleRefresh} className={loading ? 'loading' : ''}>
+            <FaSync /> Refresh
+          </RefreshButton>
+          {unreadCount > 0 && (
+            <MarkAllRead onClick={handleMarkAllAsRead}>Mark all as read</MarkAllRead>
+          )}
+        </div>
       </DropdownHeader>
 
       <NotificationList>
