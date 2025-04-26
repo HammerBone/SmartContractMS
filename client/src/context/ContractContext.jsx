@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useContext, useCallback } from 'rea
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import AuthContext from './AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const ContractContext = createContext();
 
@@ -11,21 +12,39 @@ export const ContractProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, refreshToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Fetch all contracts
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Check if we have a valid token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('You are not logged in. Please log in to continue.');
+        toast.error('You are not logged in. Please log in to continue.');
+        navigate('/login');
+        return;
+      }
+      
       const { data } = await api.get('/contracts');
       setContracts(data);
       setLoading(false);
     } catch (error) {
-      setError(error.response?.data?.message || 'Error fetching contracts');
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please log in again.');
+        toast.error('Your session has expired. Please log in again.');
+        navigate('/login');
+      } else {
+        setError(error.response?.data?.message || 'Error fetching contracts');
+        toast.error('Failed to load contracts');
+      }
       setLoading(false);
-      toast.error('Failed to load contracts');
     }
-  }, []);
+  }, [navigate]);
 
   // Fetch all contracts for the authenticated user
   useEffect(() => {
@@ -38,14 +57,37 @@ export const ContractProvider = ({ children }) => {
   const fetchContractById = async (id) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Check if we have a valid token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('You are not logged in. Please log in to continue.');
+        toast.error('You are not logged in. Please log in to continue.');
+        navigate('/login');
+        return null;
+      }
+      
       const { data } = await api.get(`/contracts/${id}`);
+      if (!data) {
+        setError('Contract not found');
+        setLoading(false);
+        return null;
+      }
       setContract(data);
       setLoading(false);
       return data;
     } catch (error) {
-      setError(error.response?.data?.message || 'Error fetching contract');
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please log in again.');
+        toast.error('Your session has expired. Please log in again.');
+        navigate('/login');
+      } else {
+        const errorMessage = error.response?.data?.message || 'Error fetching contract';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
       setLoading(false);
-      toast.error('Failed to load contract details');
       return null;
     }
   };

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaArrowLeft, FaCheck, FaTimes, FaDownload } from 'react-icons/fa';
 import ContractContext from '../context/ContractContext';
@@ -7,6 +7,7 @@ import AuthContext from '../context/AuthContext';
 import Loader from '../components/common/Loader';
 import { blockchainService } from '../services/blockchainService';
 import { QRCodeSVG } from 'qrcode.react';
+import { toast } from 'react-toastify';
 
 // Base path for the application
 const BASE_PATH = '/proxy/3000';
@@ -232,22 +233,38 @@ const VerificationLink = styled.div`
 
 const ContractDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { contract, loading, error, fetchContractById, signContract } = useContext(ContractContext);
-  const { user } = useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
   const [signing, setSigning] = useState(false);
   const [verificationUrl, setVerificationUrl] = useState('');
+  const [localError, setLocalError] = useState(null);
 
   useEffect(() => {
     const loadContract = async () => {
       try {
-        console.log(id);
-        await fetchContractById(id);
+        setLocalError(null);
+        
+        // Check if user is authenticated
+        if (!isAuthenticated) {
+          setLocalError('You must be logged in to view this contract.');
+          toast.error('You must be logged in to view this contract.');
+          navigate('/login');
+          return;
+        }
+        
+        const result = await fetchContractById(id);
+        if (!result) {
+          setLocalError('Contract not found or you do not have permission to view it.');
+        }
       } catch (error) {
         console.error('Error loading contract:', error);
+        setLocalError(error.message || 'Failed to load contract details');
+        toast.error('Failed to load contract details');
       }
     };
     loadContract();
-  }, [fetchContractById, id]);
+  }, [fetchContractById, id, isAuthenticated, navigate]);
 
   useEffect(() => {
     if (contract && contract.verificationCode) {
@@ -284,26 +301,50 @@ const ContractDetailsPage = () => {
   };
 
   const canSign = () => {
-    if (!contract || !user) return false;
+    if (!contract?.parties || !user) return false;
     const userParty = contract.parties.find(
-      party => (party.user && party.user._id === user._id) || party.email === user.email
+      party => (party?.user && party.user._id === user._id) || party?.email === user.email
     );
     return userParty && !userParty.signed;
   };
 
   if (loading) {
-    return <Loader />;
-  }
-
-  if (error) {
     return (
       <ContractContainer>
-        <BackLink to={`${BASE_PATH}/contracts`}>
+        <BackLink to="/contracts">
+          <FaArrowLeft /> Back to Contracts
+        </BackLink>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <Loader />
+          <p>Loading contract details...</p>
+        </div>
+      </ContractContainer>
+    );
+  }
+
+  if (error || localError) {
+    return (
+      <ContractContainer>
+        <BackLink to="/contracts">
           <FaArrowLeft /> Back to Contracts
         </BackLink>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <h2>Error Loading Contract</h2>
-          <p>{error}</p>
+          <p>{error || localError}</p>
+          <button 
+            onClick={() => navigate('/contracts')}
+            style={{ 
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--primary-color)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 'var(--border-radius)',
+              cursor: 'pointer'
+            }}
+          >
+            Return to Contracts
+          </button>
         </div>
       </ContractContainer>
     );
@@ -412,7 +453,7 @@ const ContractDetailsPage = () => {
           <ContentSection>
             <SectionTitle>Parties</SectionTitle>
             <PartiesList>
-              {contract.parties.map((party, index) => (
+              {contract?.parties?.map((party, index) => (
                 <PartyItem key={index}>
                   <PartyInfo>
                     <PartyName>
